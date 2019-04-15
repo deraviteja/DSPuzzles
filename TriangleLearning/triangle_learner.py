@@ -54,8 +54,8 @@ triangle_coordinates = [(single_sample(), single_sample()),
                         (single_sample(), single_sample()),
                         (single_sample(), single_sample())]
 
-# sample_triangle = Triangle(*triangle_coordinates)
-sample_triangle = Triangle()
+sample_triangle = Triangle(*triangle_coordinates)
+# sample_triangle = Triangle()
 
 training_data = data_generator(size_0=10000, size_1=5000, polygon=sample_triangle)
 
