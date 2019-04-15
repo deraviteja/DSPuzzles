@@ -7,12 +7,13 @@ import math
 
 uniform_a = 0
 uniform_b = 1
-uniform_number_generator = lambda size: np.random.uniform(low=uniform_a, high=uniform_b, size=size)
 
+
+def uniform_number_generator(size): return np.random.uniform(low=uniform_a, high=uniform_b, size=size)
 #   let's verify by creating histograms
 
-sample_data = uniform_number_generator(size=10000)
 
+sample_data = uniform_number_generator(size=10000)
 
 #       create 'n' bins around the generated data
 
@@ -56,7 +57,7 @@ def find_where_cdf_is(x=0, my_cdf=norm.cdf):
 
             end_value = new_end_value
 
-    print x, start_value
+    print(x, start_value)
 
     return start_value
 

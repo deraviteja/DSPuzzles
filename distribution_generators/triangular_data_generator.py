@@ -134,13 +134,57 @@ def straight_line_uniform_generator(point1, point2, size=100):
             for u in np.random.uniform(low=0, high=1, size=size)]
 
 
+def straight_line_triangle_generator(point1, point2, size=100):
+    """
+
+    :param point1:
+    :param point2:
+    :param size:
+    :return:
+    """
+    sample1 = [(point1.x + u * (point2.x - point1.x), point1.y + u * (point2.y - point1.y))
+               for u in np.random.uniform(low=0, high=1, size=size)]
+    sample2 = [(point1.x + u * (point2.x - point1.x), point1.y + u * (point2.y - point1.y))
+               for u in np.random.uniform(low=0, high=1, size=size)]
+
+    generated_samples = []
+
+    for s1, s2 in zip(sample1,sample2):
+
+        generated_sample_x, generated_sample_y = float(s1[0] + s2[0])/2.0, float(s1[1] + s2[1])/2.0
+
+        generated_sample_x = generated_sample_x + float(- point1.x + point2.x)/2.0\
+            if generated_sample_x < float(- point1.x + point2.x)/2.0 \
+            else generated_sample_x - float(- point1.x + point2.x)/2.0
+
+        generated_sample_y = generated_sample_y + float(- point1.y + point2.y)/2.0 \
+            if generated_sample_y < float(- point1.y + point2.y)/2.0 \
+            else generated_sample_y - float(- point1.y + point2.y)/2.0
+
+        generated_sample = (generated_sample_x, generated_sample_y)
+
+        generated_samples.append(generated_sample)
+
+        # print(generated_sample)
+
+    return generated_samples
+
+
 if __name__ == "__main__":
 
     from matplotlib import pyplot
 
-    triangle_coordinates = [(0, 0), (1, 0), (0, 3)]
+    generated_quad_samples = straight_line_triangle_generator(point1=two_D_coordinate(0, 1), point2=two_D_coordinate(1, 0))
 
-    sampled_coordinates = triangle_generator(*triangle_coordinates, size=10000)
+    def single_sample(): return np.random.uniform(low=0, high=10, size=1)
+
+    # triangle_coordinates = [(single_sample(), single_sample()),
+    #                         (single_sample(), single_sample()),
+    #                         (single_sample(), single_sample())]
+
+    # sampled_coordinates = triangle_generator(*triangle_coordinates, size=10000)
+
+    sampled_coordinates = triangle_coordinates = generated_quad_samples
 
     pyplot.plot([sampled_coordinate[0] for sampled_coordinate in sampled_coordinates],
                 [sampled_coordinate[1] for sampled_coordinate in sampled_coordinates],'bo')
