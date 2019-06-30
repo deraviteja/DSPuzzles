@@ -41,11 +41,7 @@ def data_generator(size_0=10000, size_1=10000, polygon=Triangle()):
 
     generated_data = triangle_data + not_triangle_data
 
-    print(len(triangle_data), len(not_triangle_data), len(generated_data))
-
     shuffle(generated_data)
-
-    print(generated_data[:100])
 
     return generated_data
 
@@ -55,7 +51,6 @@ triangle_coordinates = [(single_sample(), single_sample()),
                         (single_sample(), single_sample())]
 
 sample_triangle = Triangle(*triangle_coordinates)
-# sample_triangle = Triangle()
 
 training_data = data_generator(size_0=10000, size_1=5000, polygon=sample_triangle)
 
@@ -71,7 +66,7 @@ pyplot.ylim([min([data[1] for data in training_data]), max([data[1] for data in 
 pyplot.grid()
 pyplot.show()
 
-testing_data = data_generator(size_0=2000, size_1=200, polygon=sample_triangle)
+testing_data = data_generator(size_0=2000, size_1=2000, polygon=sample_triangle)
 
 pyplot.plot([data[0] for data in testing_data if data[2] == 0],
             [data[1] for data in testing_data if data[2] == 0], 'bo', c='0.8')
@@ -87,8 +82,11 @@ pyplot.show()
 
 class_0 = sum([1 for data in training_data if data[2] == 0])
 class_1 = sum([1 for data in training_data if data[2] == 1])
+base_accuracy = float(class_0) / float(class_0 + class_1)
 
-print("Base Accuracy {}".format(float(class_0) / float(class_0 + class_1)))
+base_accuracy = base_accuracy if base_accuracy > 0.5 else 1 - base_accuracy
+
+print("Base Accuracy {}".format(base_accuracy))
 
 #           ######################################          #
 
@@ -98,24 +96,32 @@ print("Base Accuracy {}".format(float(class_0) / float(class_0 + class_1)))
 
 
 #   for three sides of the triangle
-hidden_layer = keras.layers.Dense(units=3, activation=tf.keras.activations.hard_sigmoid,
-                                  bias_regularizer=tf.contrib.layers.l2_regularizer(0.01), input_shape=(2,),
-                                  use_bias=True, kernel_regularizer=tf.contrib.layers.l2_regularizer(0.01),
-                                  # bias_initializer='glorot_uniform'
+hidden_layer = keras.layers.Dense(units=3, activation=tf.keras.activations.sigmoid,
+                                  bias_regularizer=tf.contrib.layers.l2_regularizer(0.00001),
+                                  input_shape=(2,),
+                                  use_bias=True,
+                                  kernel_regularizer=tf.contrib.layers.l2_regularizer(0.00001),
+                                  bias_initializer='TFRandomNormal',
+                                  kernel_initializer='Orthogonal'
                                   )
 
 #   for their sum
-outer_layer = keras.layers.Dense(units=1, activation=tf.keras.activations.sigmoid, use_bias=True, bias_regularizer=tf.contrib.layers.l2_regularizer(1.0), kernel_regularizer=tf.contrib.layers.l2_regularizer(1.0),
-                                 bias_initializer='glorot_uniform')
+outer_layer = keras.layers.Dense(units=1, activation=tf.keras.activations.sigmoid,
+                                 use_bias=True,
+                                 bias_regularizer=tf.contrib.layers.l2_regularizer(0.00001),
+                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(0.00001),
+                                 bias_initializer='TFRandomNormal',
+                                 kernel_initializer='Orthogonal'
+                                 )
 
 triangle_learner = keras.models.Sequential()
 
 triangle_learner.add(hidden_layer)
 triangle_learner.add(outer_layer)
 
-my_optimizer = keras.optimizers.SGD(lr=0.01, nesterov=True)
+my_optimizer = keras.optimizers.Adam(lr=0.1)
 
-my_loss_function = keras.losses.mean_squared_logarithmic_error
+my_loss_function = keras.losses.binary_crossentropy
 
 triangle_learner.compile(optimizer=my_optimizer, loss=my_loss_function, metrics=['accuracy'])
 
@@ -123,14 +129,29 @@ training_data_x = tf.convert_to_tensor([(data[0], data[1]) for data in training_
 
 training_data_y = tf.convert_to_tensor([data[2] for data in training_data])
 
-writer = tf.summary.FileWriter('.')
-writer.add_graph(tf.get_default_graph())
-writer.flush()
-
-triangle_learner.fit(training_data_x, training_data_y, epochs=1000, steps_per_epoch=10000)
-
-print(triangle_learner.get_weights())
+triangle_learner.fit(training_data_x, training_data_y, epochs=5, steps_per_epoch=1000)
 
 print(hidden_layer.get_weights())
 
 print(outer_layer.get_weights())
+
+testing_data_x = tf.convert_to_tensor([(data[0], data[1]) for data in testing_data])
+
+testing_data_y = tf.convert_to_tensor([data[2] for data in testing_data])
+
+predictions = triangle_learner.predict(x=testing_data_x, steps=10)
+
+
+pyplot.plot([data[0] for data, prediction in zip(testing_data, predictions) if prediction[0] < 0.5],
+            [data[1] for data, prediction in zip(testing_data, predictions) if prediction[0] < 0.5],
+            'bo', c='0.8')
+
+pyplot.plot([data[0] for data, prediction in zip(testing_data, predictions) if prediction[0] >= 0.5],
+            [data[1] for data, prediction in zip(testing_data, predictions) if prediction[0] >= 0.5],
+            'bo', c='0.2')
+
+pyplot.xlim([min([data[0] for data in testing_data]), max([data[0] for data in testing_data])])
+pyplot.ylim([min([data[1] for data in testing_data]), max([data[1] for data in testing_data])])
+
+pyplot.grid()
+pyplot.show()
