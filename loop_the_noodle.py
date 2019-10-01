@@ -8,8 +8,10 @@ The number of loops formed by the noodles this way is stochastic. Calculate the 
 
 """
 import random
+from matplotlib import pyplot
 
 total_number_of_noodles = 75
+number_of_experiments = 100000
 
 
 def noodle_string_for_other_end(noodle_id_string):
@@ -34,8 +36,6 @@ for noodle in range(total_number_of_noodles):
 assert len(noodle_ends) == 2*total_number_of_noodles
 
 noodle_ends_list = noodle_ends.copy()
-
-number_of_experiments = 100000
 
 samples = []
 
@@ -85,10 +85,72 @@ for experiment in range(number_of_experiments):
 
             # print("New noodle formed {}".format(next_noodle_id))
 
-    print("\n Experiment id {},  Total loops formed :: {} \n ".format(experiment, total_loops))
+    # print("\n Experiment id {},  Total loops formed :: {} \n ".format(experiment, total_loops))
 
     samples.append(total_loops)
 
 print("Sample average : {}".format(sum(samples) / len(samples)))
 
 print("Expected value {}".format(sum([1/((2*k) + 1) for k in range(total_number_of_noodles)])))
+
+
+def generate_n_noodle_loop_distribution(number_of_noodles):
+
+    assert isinstance(number_of_noodles, int) and number_of_noodles > 0
+
+    if number_of_noodles == 1:
+        return [0, 1]
+    else:
+
+        distribution_n_1 = generate_n_noodle_loop_distribution(number_of_noodles - 1)
+
+        distribution_n = [0 for i in range(number_of_noodles + 1)]
+
+        prob_value = 1.0 / (2 * number_of_noodles - 1)
+
+        for index, value in enumerate(distribution_n_1):
+
+            if index > 0:
+
+                distribution_n[index] = \
+                    distribution_n_1[index] + (distribution_n_1[index - 1] - distribution_n_1[index]) * prob_value
+
+        distribution_n[number_of_noodles] = distribution_n_1[number_of_noodles - 1] * prob_value
+
+        return distribution_n
+
+
+assert sum(generate_n_noodle_loop_distribution(total_number_of_noodles)) == 1
+
+"""
+We will now go ahead and see if we are able to create the 
+generative distribution of these loops for the given number of noodles.
+"""
+
+sample_dist = [0 for i in range(total_number_of_noodles + 1)]
+
+for sample in samples:
+
+    sample_dist[sample] += 1
+
+sample_dist = [sample/number_of_experiments for sample in sample_dist]
+
+pyplot.figure()
+pyplot.bar(x=range(total_number_of_noodles + 1),
+           height=sample_dist)
+pyplot.xlim([0, total_number_of_noodles + 1])
+pyplot.ylim([0, 0.5])
+pyplot.title("Sample distribution of loops generated using {} noodles".format(
+    total_number_of_noodles))
+pyplot.grid()
+pyplot.show()
+
+pyplot.figure()
+pyplot.bar(x=range(total_number_of_noodles + 1),
+           height=generate_n_noodle_loop_distribution(total_number_of_noodles))
+pyplot.ylim([0, 0.5])
+pyplot.xlim([0, total_number_of_noodles + 1])
+pyplot.title("Probability distribution of loops generated using {} noodles".format(
+    total_number_of_noodles))
+pyplot.grid()
+pyplot.show()
