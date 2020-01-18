@@ -13,7 +13,7 @@
 #   ] * (k/p) [i.e. chance that it was store by func(p, k)]
 #   = [ 1 - k/(p+1) + (k-1)/(p+1))] * (k/p) = [p/p+1]*(k/p)
 #   = k/ (p+1)
-#   This proves the func(p, k) is extensible while retaining the property of uniformity
+#   This proves the func(p, k) is extensible while retaining the property of 'uniformly' storing k/p+1 index
 
 #   Algorithm:
 #   Let S be the stream, C be the container used
